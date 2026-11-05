@@ -1,0 +1,283 @@
+{
+  "skill_name": "humanizer-asd-ste100",
+  "metadata": {
+    "version": "1.0.0",
+    "eval_methodology": "adversarial: each eval has a trap that a model falls into without the skill. Run each prompt with the skill and without it, then grade the output against the assertions.",
+    "without_skill_runner_note": "For the without-skill run, disable this skill and all other humanizer, plain-language, or controlled-English skills. The model must use only its default knowledge.",
+    "coverage": "English strict STE (1-4, 14-17, 19), English AI patterns (5, 20), adaptive Standard level (6), code comments (7), commit messages (8), Russian (9-12), other languages (13), scope limits (18, 19)"
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Rewrite this as an ASD-STE100 procedure: 'In order to ensure that the backup has been completed successfully, the log file should be checked by the operator, and after that the service can be restarted by running `systemctl restart app`.'",
+      "trap": "Without the skill, the model keeps one long sentence, keeps the passive voice ('should be checked'), keeps the present perfect ('has been completed'), keeps 'ensure' and 'check' as verbs, or changes the command.",
+      "expected_output": "A numbered procedure with one imperative instruction in each step. Step 1 tells the operator to examine the log file to make sure that the backup is complete. Step 2 tells the operator to restart the service with the unchanged command `systemctl restart app`.",
+      "files": [],
+      "assertions": [
+        { "id": "1.1", "description": "the steps are numbered and each step has one instruction in the imperative" },
+        { "id": "1.2", "description": "the steps do not use the passive voice or the present perfect ('has been completed')" },
+        { "id": "1.3", "description": "the output does not use 'in order to' or 'ensure'" },
+        { "id": "1.4", "description": "the output does not use 'check' as a verb (it uses 'examine' or 'do a check of')" },
+        { "id": "1.5", "description": "the command `systemctl restart app` is unchanged" },
+        { "id": "1.6", "description": "each step has 20 words or fewer" }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Is this procedure sentence ASD-STE100 compliant? Correct it if necessary: 'Set the pressure to 2.5 bar (refer to Table 4) and examine the high-pressure hose on pump P-101.'",
+      "trap": "Without the skill, the model counts each token separately and says that the sentence is too long, or it says that the sentence is fully compliant. It does not see that the sentence has two instructions.",
+      "expected_output": "The output says that the sentence is in the 20-word limit when STE counting rules apply (2.5 bar, the parenthesis, high-pressure, and P-101 are 1 word each). It also says that the sentence has two instructions and splits it into two steps. It keeps '2.5 bar', the reference to Table 4, and 'P-101' unchanged.",
+      "files": [],
+      "assertions": [
+        { "id": "2.1", "description": "the output does not claim that the sentence has more than 20 words" },
+        { "id": "2.2", "description": "the output identifies two instructions in one sentence as the problem" },
+        { "id": "2.3", "description": "the output splits the text into two steps or sentences with one instruction each" },
+        { "id": "2.4", "description": "'2.5 bar', the reference to Table 4, and 'P-101' are kept" }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Make this descriptive sentence ASD-STE100 compliant: 'During the night, the configuration file was changed.'",
+      "trap": "Without the skill, the model converts each passive sentence to active voice and invents an actor, for example 'The system changed the configuration file' or 'An administrator changed the configuration file'.",
+      "expected_output": "The output keeps the passive voice or says that the sentence already complies, because the actor is unknown and the text is descriptive. It does not invent an actor. It can ask the user who changed the file.",
+      "files": [],
+      "assertions": [
+        { "id": "3.1", "description": "the output does not invent an actor (system, administrator, user, script)" },
+        { "id": "3.2", "description": "the output says that the passive voice is permitted because the actor is unknown in descriptive text" },
+        { "id": "3.3", "description": "the meaning stays the same: the configuration file changed during the night" }
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Write an STE safety instruction for this: before you replace the UPS battery the unit must be disconnected from the mains, otherwise you may get an electric shock.",
+      "trap": "Without the skill, the model uses CAUTION or NOTE, puts the risk before the command, keeps the passive 'must be disconnected', or writes one long sentence with 'otherwise'.",
+      "expected_output": "A WARNING (risk of injury). It starts with the command: disconnect the UPS from the mains power before you replace the battery. Then it gives the risk and the result in short sentences: electric shock, which can cause injury or death.",
+      "files": [],
+      "assertions": [
+        { "id": "4.1", "description": "the label is WARNING, not CAUTION or NOTE" },
+        { "id": "4.2", "description": "the instruction starts with the command, not with the risk" },
+        { "id": "4.3", "description": "the risk (electric shock) and its result (injury or death) come after the command" },
+        { "id": "4.4", "description": "the output has no semicolon and each sentence has 20 words or fewer" },
+        { "id": "4.5", "description": "the command is in the imperative, not in the passive ('must be disconnected')" }
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Make this release note sound like a human wrote it:\n\n'🚀 Exciting news! We're thrilled to announce v2.4 — a game-changer that seamlessly elevates your workflow. Not only does it boost performance, but it also unlocks new possibilities. In conclusion, v2.4 is a testament to our commitment to innovation. Let me know if you'd like any changes!'",
+      "trap": "Without the skill, the model replaces the buzzwords with other buzzwords, keeps the emoji or the closing offer, or invents numbers (for example '40% faster') to make the text look specific.",
+      "expected_output": "A short, plain note: v2.4 is available and improves performance. No emoji, no buzzwords, no 'not only… but also', no conclusion, and no chat offer. No invented numbers or features. The output tells the user that the source has no specific changes, or it marks the gap with a placeholder.",
+      "files": [],
+      "assertions": [
+        { "id": "5.1", "description": "the note has no emoji" },
+        { "id": "5.2", "description": "the note does not contain: game-changer, seamlessly, elevates, unlocks, testament, thrilled" },
+        { "id": "5.3", "description": "the note does not use the 'not only… but also' construction" },
+        { "id": "5.4", "description": "the note does not contain 'In conclusion' or 'Let me know'" },
+        { "id": "5.5", "description": "the output does not invent metrics or features that are not in the source" },
+        { "id": "5.6", "description": "the output tells the user that specific changes are missing, or marks them with a placeholder" }
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "How do I undo my last git commit but keep the changes in my files?",
+      "trap": "With a style skill active, the model applies Strict STE to a chat answer and writes stiff text ('Do a reset of the commit'). Or it keeps chat habits: an introduction, headings, emoji, a long list of options, and a closing offer.",
+      "expected_output": "The first sentence or the first code block gives `git reset --soft HEAD~1` (or `git reset HEAD~1` with the difference explained). The answer is short and natural, has no headings, and can add one line about a commit that is already pushed.",
+      "files": [],
+      "assertions": [
+        { "id": "6.1", "description": "the first sentence or the first code block contains a `git reset` command that keeps the changes" },
+        { "id": "6.2", "description": "the answer has no introduction ('Great question', 'Sure', 'Here is how')" },
+        { "id": "6.3", "description": "the answer has no headings and no emoji" },
+        { "id": "6.4", "description": "the answer has no closing offer ('Let me know', 'Hope this helps')" },
+        { "id": "6.5", "description": "the answer has approximately 120 words or fewer" },
+        { "id": "6.6", "description": "the answer reads naturally and does not force Strict STE wording such as 'do a reset of'" }
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Add comments to this Python function according to the skill:\n\n```python\ndef fetch_rates(client):\n    for attempt in range(3):\n        try:\n            return client.get(\"/rates\", timeout=5)\n        except TimeoutError:\n            time.sleep(2 ** attempt)\n    raise RatesUnavailable()\n```",
+      "trap": "Without the skill, the model comments each line with what the code does ('# Loop three times', '# Sleep'), writes a long docstring with words such as 'robust' or 'gracefully', or changes the code.",
+      "expected_output": "A short docstring in the present simple (for example 'Returns the exchange rates from the API.') and max one or two comments that tell why, for example why the function retries with an exponential delay and when it raises `RatesUnavailable`. The code does not change.",
+      "files": [],
+      "assertions": [
+        { "id": "7.1", "description": "the code logic and the identifiers are unchanged" },
+        { "id": "7.2", "description": "no comment only repeats a line of code (for example '# loop 3 times', '# sleep')" },
+        { "id": "7.3", "description": "at least one comment or the docstring tells why (the retry and delay, or the raised exception)" },
+        { "id": "7.4", "description": "the docstring summary is one sentence in the present simple or the imperative, with 25 words or fewer" },
+        { "id": "7.5", "description": "the comments do not contain: robust, seamlessly, gracefully, leverage" }
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Write a commit message for this change: in config/upload.yaml I changed `timeout` from 10 to 30 seconds because uploads of large files failed on slow networks.",
+      "trap": "Without the skill, the model writes a subject in the past tense or a description ('Updated the timeout…', 'This commit increases…'), adds an emoji or a period, or writes a long body with marketing words.",
+      "expected_output": "A subject in the imperative with max 72 characters and no period, for example 'Increase upload timeout to 30 s'. A short body tells why: uploads of large files failed on slow networks.",
+      "files": [],
+      "assertions": [
+        { "id": "8.1", "description": "the subject is in the imperative" },
+        { "id": "8.2", "description": "the subject has 72 characters or fewer and no period at the end" },
+        { "id": "8.3", "description": "the body gives the reason (large files, slow networks)" },
+        { "id": "8.4", "description": "the message has no emoji and does not start with 'This commit'" },
+        { "id": "8.5", "description": "the values 10 and 30 seconds are correct" }
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Перепиши понятным языком: «В целях обеспечения корректной работы системы необходимо осуществить проверку конфигурационного файла, после чего администратором производится перезапуск сервиса.»",
+      "trap": "Without the skill, the model keeps the bureaucratic style ('осуществить', 'производится', 'в целях'), keeps the passive 'администратором производится', or translates the text into English.",
+      "expected_output": "Russian text with steps in the imperative 'вы' form: «Проверьте конфигурационный файл.» «Перезапустите сервис.» It can give the purpose in a short form: «чтобы система работала правильно». No facts are added.",
+      "files": [],
+      "assertions": [
+        { "id": "9.1", "description": "the output is in Russian" },
+        { "id": "9.2", "description": "the output does not contain 'осуществить', 'производится', 'в целях обеспечения'" },
+        { "id": "9.3", "description": "the actions use the imperative 'вы' form (Проверьте, Перезапустите) or the active voice with the administrator as the actor" },
+        { "id": "9.4", "description": "each sentence has 20 words or fewer" },
+        { "id": "9.5", "description": "the output does not add facts (file names, commands) that are not in the source" }
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "Убери признаки ИИ из текста: «Отличный вопрос! Давайте разберёмся. Kubernetes — это не просто оркестратор, а целая экосистема, которая играет ключевую роль в современном мире разработки. Важно отметить, что он открывает широкий спектр возможностей для команд. Надеюсь, это поможет!»",
+      "trap": "Without the skill, the model removes only the greeting. It keeps the rhetoric ('не просто…, а', 'играет ключевую роль', 'широкий спектр') or replaces it with other stock phrases.",
+      "expected_output": "One or two plain Russian sentences: Kubernetes is a container orchestrator, a system that runs and manages containers. No chat wrapper, no negative parallelism, no stock phrases, and no closing wish.",
+      "files": [],
+      "assertions": [
+        { "id": "10.1", "description": "the output does not contain 'Отличный вопрос', 'Давайте разберёмся', 'Надеюсь, это поможет'" },
+        { "id": "10.2", "description": "the output does not use the 'не просто…, а' construction" },
+        { "id": "10.3", "description": "the output does not contain 'играет ключевую роль', 'в современном мире', 'Важно отметить', 'широкий спектр'" },
+        { "id": "10.4", "description": "the output is in Russian" },
+        { "id": "10.5", "description": "the output does not add new marketing claims" }
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "Перепиши по STE: «Проверив наличие обновлений, установленных администратором, и убедившись в отсутствии ошибок в журнале событий системы мониторинга состояния серверов, перезапустите приложение.»",
+      "trap": "Without the skill, the model keeps the gerund phrases ('проверив', 'убедившись') in one long sentence, or keeps the chain of five nouns 'журнале событий системы мониторинга состояния серверов'.",
+      "expected_output": "Numbered steps in the imperative 'вы' form, for example: 1. Убедитесь, что администратор установил обновления. 2. Откройте журнал событий в системе мониторинга серверов и убедитесь, что в нём нет ошибок. 3. Перезапустите приложение.",
+      "files": [],
+      "assertions": [
+        { "id": "11.1", "description": "the output does not contain gerund phrases ('проверив', 'убедившись')" },
+        { "id": "11.2", "description": "the text is split into separate steps or sentences with one main action each" },
+        { "id": "11.3", "description": "no chain has more than 3 nouns in a row without a preposition or a verb between them" },
+        { "id": "11.4", "description": "the steps use the imperative 'вы' form" },
+        { "id": "11.5", "description": "the facts stay: the administrator installs the updates, the event log of the monitoring system has no errors, then the application restarts" }
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "Сделай инструкцию единообразной:\n1. Открыть настройки.\n2. Нажмите «Сохранить».\n3. Необходимо перезагрузить приложение.",
+      "trap": "Without the skill, the model changes all steps to the infinitive, keeps 'Необходимо', or changes the UI label «Сохранить».",
+      "expected_output": "1. Откройте настройки. 2. Нажмите «Сохранить». 3. Перезагрузите приложение.",
+      "files": [],
+      "assertions": [
+        { "id": "12.1", "description": "all steps use the imperative 'вы' form" },
+        { "id": "12.2", "description": "the output does not contain 'Необходимо'" },
+        { "id": "12.3", "description": "the UI label «Сохранить» is unchanged and stays in «ёлочки»" },
+        { "id": "12.4", "description": "the numbering stays and each step has one action" }
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "Simplify this instruction for administrators: 'Die Durchführung der Installation der Software erfolgt durch den Administrator, nachdem die Überprüfung der Systemvoraussetzungen abgeschlossen wurde.'",
+      "trap": "Without the skill, the model translates the text into English, or keeps the nominal style ('Durchführung', 'Überprüfung') and the passive construction.",
+      "expected_output": "German steps in the imperative 'Sie' form, in the correct order, for example: 1. Prüfen Sie die Systemvoraussetzungen. 2. Installieren Sie die Software.",
+      "files": [],
+      "assertions": [
+        { "id": "13.1", "description": "the output is in German" },
+        { "id": "13.2", "description": "the output does not contain 'Durchführung' or 'erfolgt durch'" },
+        { "id": "13.3", "description": "the output uses verbs (prüfen, installieren) instead of verbal nouns" },
+        { "id": "13.4", "description": "the order is correct: examine the system requirements first, then install the software" },
+        { "id": "13.5", "description": "the output uses the imperative 'Sie' form or the active voice" }
+      ]
+    },
+    {
+      "id": 14,
+      "prompt": "Make this README section clear and STE-compliant: 'To get started, you'll want to run `npm install --save-dev @acme/cli` and then you can simply execute `acme init --force`, which will basically set everything up for you.'",
+      "trap": "Without the skill, the model changes or 'corrects' the commands, keeps 'simply' and 'basically', keeps the contraction, or invents what `--force` does.",
+      "expected_output": "Numbered steps in the imperative with both commands unchanged: 1. Install the CLI: `npm install --save-dev @acme/cli`. 2. Initialize the project: `acme init --force`.",
+      "files": [],
+      "assertions": [
+        { "id": "14.1", "description": "both commands are identical to the source, character for character" },
+        { "id": "14.2", "description": "the output does not contain 'simply', 'basically', or 'you'll'" },
+        { "id": "14.3", "description": "the output uses numbered steps in the imperative" },
+        { "id": "14.4", "description": "the output does not invent what `--force` does" }
+      ]
+    },
+    {
+      "id": 15,
+      "prompt": "Write an STE procedure to rotate the API key of our service. We use the admin console.",
+      "trap": "Without the skill, the model invents menu paths and labels (for example 'Settings > Security > API Keys > Regenerate'), key lifetimes, or names of environment variables, and gives them as facts.",
+      "expected_output": "A procedure with placeholders for the unknown UI paths and labels (for example `[TBD: menu path]`), or one short question to the user about the missing details. The steps are in the imperative with one action each.",
+      "files": [],
+      "assertions": [
+        { "id": "15.1", "description": "the output does not give specific menu names or labels as facts without a placeholder mark" },
+        { "id": "15.2", "description": "the output asks for the missing details or marks them" },
+        { "id": "15.3", "description": "the steps are numbered, in the imperative, with one action each and 20 words or fewer" },
+        { "id": "15.4", "description": "the output has no chat wrapper" }
+      ]
+    },
+    {
+      "id": 16,
+      "prompt": "Correct this procedure step for ASD-STE100:\n\n'3. Remove the cover.\nNOTE: Do not use a metal tool to remove the cover, because you can scratch the surface.'",
+      "trap": "Without the skill, the model keeps the instruction in the NOTE and only changes the words.",
+      "expected_output": "The instruction moves out of the NOTE. It becomes a CAUTION before step 3, because the risk is damage to equipment: 'CAUTION: Do not use a metal tool to remove the cover. A metal tool can cause damage to the surface.'",
+      "files": [],
+      "assertions": [
+        { "id": "16.1", "description": "the output has no NOTE that contains an instruction" },
+        { "id": "16.2", "description": "the output uses CAUTION, not WARNING, because the risk is damage to equipment (or it moves the instruction into the step)" },
+        { "id": "16.3", "description": "the safety instruction starts with the command, then gives the risk" },
+        { "id": "16.4", "description": "step 3 stays an instruction in the imperative" }
+      ]
+    },
+    {
+      "id": 17,
+      "prompt": "Make this ASD-STE100 compliant (descriptive text): 'The script has been updated; it is now checking the input files before uploading them.'",
+      "trap": "Without the skill, the model keeps the semicolon, the present perfect, or the progressive form, or keeps 'check' and 'uploading' as verbs.",
+      "expected_output": "Two short sentences in simple tenses, for example: 'The script was updated. Now it examines the input files before it uploads them.'",
+      "files": [],
+      "assertions": [
+        { "id": "17.1", "description": "the output has no semicolon" },
+        { "id": "17.2", "description": "the output does not use the present perfect ('has been')" },
+        { "id": "17.3", "description": "the output does not use the progressive form ('is checking')" },
+        { "id": "17.4", "description": "the output does not use 'uploading' as a verb (it uses 'before it uploads them')" },
+        { "id": "17.5", "description": "the output does not use 'check' as a verb" }
+      ]
+    },
+    {
+      "id": 18,
+      "prompt": "Напиши короткое стихотворение про осень.",
+      "trap": "With the skill installed, the model applies STE to a poem: short flat sentences, imperative forms, word limits, or a list of changes.",
+      "expected_output": "A normal short poem in Russian. The STE rules do not flatten it. There is no list of changes and no comment about STE.",
+      "files": [],
+      "assertions": [
+        { "id": "18.1", "description": "the output is a poem in Russian" },
+        { "id": "18.2", "description": "the output has no list of changes and no comment about STE rules" },
+        { "id": "18.3", "description": "the poem is not changed into numbered steps or imperative instructions" }
+      ]
+    },
+    {
+      "id": 19,
+      "prompt": "Rewrite this procedure in ASD-STE100:\n\n1. Stop the service.\n2. Remove the old log files.\n3. Start the service.",
+      "trap": "Without the skill, the model rewrites text that already complies: it replaces words with synonyms ('Halt', 'Delete', 'Launch'), adds steps, or adds explanations.",
+      "expected_output": "The output says that the procedure already complies and gives it back without changes (or with no change in meaning or words).",
+      "files": [],
+      "assertions": [
+        { "id": "19.1", "description": "the output says that the procedure already complies" },
+        { "id": "19.2", "description": "the verbs 'stop', 'remove', and 'start' are unchanged" },
+        { "id": "19.3", "description": "the output does not add steps or facts" }
+      ]
+    },
+    {
+      "id": 20,
+      "prompt": "Rewrite this README intro: 'In today's fast-paced development landscape, Fluxor serves as a robust, cutting-edge solution that empowers teams to seamlessly streamline their CI pipelines. It caches dependencies between runs and runs tests in parallel, fostering collaboration and unlocking productivity.'",
+      "trap": "Without the skill, the model keeps 'serves as', the stock introduction, or the -ing tail ('fostering collaboration'), or it adds new features.",
+      "expected_output": "The first sentence tells what Fluxor does in plain words, for example 'Fluxor makes CI pipelines faster.' The next sentence keeps the two real facts: it caches dependencies between runs and runs tests in parallel.",
+      "files": [],
+      "assertions": [
+        { "id": "20.1", "description": "the first sentence tells what Fluxor does" },
+        { "id": "20.2", "description": "the output does not contain: fast-paced, landscape, serves as, robust, cutting-edge, empowers, seamlessly, streamline, fostering, unlocking" },
+        { "id": "20.3", "description": "the output keeps both facts: dependency cache between runs and parallel tests" },
+        { "id": "20.4", "description": "the output does not add new features" },
+        { "id": "20.5", "description": "each sentence has 25 words or fewer" }
+      ]
+    }
+  ]
+}
